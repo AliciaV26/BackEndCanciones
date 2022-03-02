@@ -1,0 +1,71 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; //ToListAsync
+using WebApiCanciones.Entidades;
+
+namespace WebApiCanciones.Controllers
+{
+    [ApiController]
+    [Route("api/canciones")]
+    public class CancionesController : Microsoft.AspNetCore.Mvc.ControllerBase
+    {
+        private readonly ApplicationDbContext dbContext;
+        public CancionesController(ApplicationDbContext context)
+        {
+            this.dbContext = context;
+        }
+
+
+        [HttpGet]
+        public async Task<ActionResult<List<Cancion>>> Get()
+        {
+            return await dbContext.Canciones.ToListAsync();
+            
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> Post(Cancion cancion)
+        //async: programación asíncrona
+        //task: métodos asíncronos devuelven task
+        {
+            dbContext.Add(cancion);
+            await dbContext.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> Put(Cancion cancion, int id)
+        {
+            if(cancion.Id != id)
+            {
+                return BadRequest("El id de la canción no coincide con el establecido en la url.");
+            }
+
+            dbContext.Update(cancion);
+            await dbContext.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var exist = await dbContext.Canciones.AnyAsync(x => x.Id == id);
+            if (!exist)
+            {
+                return NotFound("El recurso no fue encontrado.");
+           
+            }
+
+            dbContext.Remove(new Cancion()
+            {
+                Id = id
+            });
+            await dbContext.SaveChangesAsync();
+            return Ok();
+        }
+
+
+
+
+
+    }
+}
